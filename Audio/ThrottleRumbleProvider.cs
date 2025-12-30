@@ -1,7 +1,7 @@
 ﻿using NAudio.Wave;
-using ThrottleShaker.Config;
+using JFlightShaker.Config;
 
-namespace ThrottleShaker.Audio;
+namespace JFlightShaker.Audio;
 
 public sealed class ThrottleRumbleProvider : WaveProvider32
 {

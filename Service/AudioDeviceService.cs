@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using NAudio.CoreAudioApi;
 
-namespace ThrottleShaker.Service;
+namespace JFlightShaker.Service;
 
 public sealed class AudioDeviceService
 {

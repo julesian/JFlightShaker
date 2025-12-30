@@ -1,4 +1,4 @@
-﻿using ThrottleShaker.Config;
+﻿using JFlightShaker.Config;
 
 public sealed class ActiveProfile
 {

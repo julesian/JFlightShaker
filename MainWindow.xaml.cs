@@ -3,14 +3,14 @@ using SharpDX.DirectInput;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
-using ThrottleShaker.Audio;
-using ThrottleShaker.Config;
-using ThrottleShaker.Core;
-using ThrottleShaker.Input;
-using ThrottleShaker.Service;
-using ThrottleShaker.Enum;
+using JFlightShaker.Audio;
+using JFlightShaker.Config;
+using JFlightShaker.Core;
+using JFlightShaker.Input;
+using JFlightShaker.Service;
+using JFlightShaker.Enum;
 
-namespace ThrottleShaker;
+namespace JFlightShaker;
 
 public partial class MainWindow : Window
 {

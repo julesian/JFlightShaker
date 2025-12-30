@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using SharpDX.DirectInput;
 
-namespace ThrottleShaker.Service;
+namespace JFlightShaker.Service;
 
 public sealed class DirectInputService : IDisposable
 {

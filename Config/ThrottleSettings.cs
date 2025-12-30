@@ -1,4 +1,4 @@
-﻿namespace ThrottleShaker.Config;
+﻿namespace JFlightShaker.Config;
 
 public sealed class ThrottleSettings
 {

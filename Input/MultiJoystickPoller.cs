@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using SharpDX.DirectInput;
 
-namespace ThrottleShaker.Input;
+namespace JFlightShaker.Input;
 
 public sealed class MultiJoystickPoller : IDisposable
 {

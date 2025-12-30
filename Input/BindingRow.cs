@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using ThrottleShaker.Input;
-using ThrottleShaker.Enum;
+using JFlightShaker.Input;
+using JFlightShaker.Enum;
 
 public sealed class BindingRow : INotifyPropertyChanged
 {

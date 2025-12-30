@@ -1,4 +1,4 @@
-﻿namespace ThrottleShaker.Enum;
+﻿namespace JFlightShaker.Enum;
 
 public enum BindingKind
 {

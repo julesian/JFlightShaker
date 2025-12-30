@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Text.Json;
-using ThrottleShaker.Config;
+using JFlightShaker.Config;
 
-namespace ThrottleShaker.Service;
+namespace JFlightShaker.Service;
 
 public sealed class ConfigStoreService
 {
@@ -15,7 +15,7 @@ public sealed class ConfigStoreService
     public string RootDir { get; }
     public string AppConfigPath => Path.Combine(RootDir, "appsettings.json");
 
-    public ConfigStoreService(string appName = "ThrottleShaker")
+    public ConfigStoreService(string appName = "JFlightShaker")
     {
         RootDir = Path.Combine(AppContext.BaseDirectory, "Config");
         Directory.CreateDirectory(RootDir);

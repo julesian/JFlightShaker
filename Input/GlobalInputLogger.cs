@@ -1,7 +1,7 @@
 ﻿using System;
 using SharpDX.DirectInput;
 
-namespace ThrottleShaker.Input;
+namespace JFlightShaker.Input;
 
 public sealed class GlobalInputLogger
 {

@@ -1,8 +1,8 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.Wave;
-using ThrottleShaker.Config;
+using JFlightShaker.Config;
 
-namespace ThrottleShaker.Audio;
+namespace JFlightShaker.Audio;
 
 public sealed class RumbleEngine : IDisposable
 {

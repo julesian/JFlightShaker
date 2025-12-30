@@ -1,7 +1,6 @@
-﻿using System;
-using ThrottleShaker.Enum;
+﻿using JFlightShaker.Enum;
 
-namespace ThrottleShaker.Input;
+namespace JFlightShaker.Input;
 
 public sealed class BindingDefinition
 {

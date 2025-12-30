@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.1.11312.151 d18.0
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThrottleShaker", "ThrottleShaker.csproj", "{3AA6B249-BEB1-4566-ADB7-6D92FC06813B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JFlightShaker", "JFlightShaker.csproj", "{3AA6B249-BEB1-4566-ADB7-6D92FC06813B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

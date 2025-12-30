@@ -1,4 +1,4 @@
-﻿namespace ThrottleShaker.Audio;
+﻿namespace JFlightShaker.Audio;
 public interface RumbleEffect
 {
     bool Finished { get; }

@@ -1,9 +1,9 @@
 ﻿using SharpDX.DirectInput;
-using ThrottleShaker.Config;
-using ThrottleShaker.Input;
-using ThrottleShaker.Enum;
+using JFlightShaker.Config;
+using JFlightShaker.Input;
+using JFlightShaker.Enum;
 
-namespace ThrottleShaker.Core;
+namespace JFlightShaker.Core;
 
 public sealed class BindingEvaluator
 {

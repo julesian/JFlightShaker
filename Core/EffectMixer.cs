@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using ThrottleShaker.Audio;
+﻿using JFlightShaker.Audio;
 
-namespace ThrottleShaker.Core;
+namespace JFlightShaker.Core;
 
 public sealed class EffectMixer
 {
