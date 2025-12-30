@@ -9,6 +9,7 @@ with SimHub, but since SimHub can’t run custom bass-shaker effects while
 
 Instead of reading game telemetry, JFlightShaker generates **simulated effects**
 directly from controller input — making it game-agnostic and lightweight.
+Makes a great massage chair too 😆.
 
 (Also… getting ready for Ace Combat 8 😄)
 
