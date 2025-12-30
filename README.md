@@ -31,7 +31,7 @@ as I build this.
 ## Requirements
 
 - Windows 10 / 11
-- .NET *(target version — fill in when finalized)*
+- .NET (To finalize)
 - DirectInput-compatible devices
 - Audio output device connected to bass shakers
 
