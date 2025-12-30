@@ -17,6 +17,14 @@ as I build this.
 
 ---
 
+## Download
+
+Grab the latest release here:
+
+- https://github.com/julesian/JFlightShaker/releases
+
+---
+
 ## Features
 
 - **Two main rumble effects**
@@ -46,14 +54,22 @@ as I build this.
 
 ---
 
-## Running
+## How to use
 
-1. Clone the repository
-2. Build from source (no prebuilt executable yet)
-3. Launch the app
-4. Select audio output, throttle, and stick devices
-5. Click **Start** to begin monitoring inputs and triggering effects
-6. To Edit effects and bindings, open and edit through configs first, at the moment there is no UI/UX input binding
+1. Download and unzip the latest release.
+2. Run `JFlightShaker.exe`.
+3. Select:
+   - **Audio**: the Windows audio output device connected to your bass shaker amp/sound card
+   - **Throttle**: the device you want to use for the throttle axis
+   - **Stick**: the device you want to use for gun fire / button events
+4. Click **Start**.
+5. To customize: Edit the json configs in the same folder and in /Config
+6. Rerun App
+
+### What you should expect
+- Moving the selected throttle axis changes the rumble intensity.
+- Pressing the configured gun button triggers the gun effect.
+- Clicking **Stop** or closing will stop processing input and audio output.
 
 ---
 
