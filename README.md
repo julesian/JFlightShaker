@@ -19,7 +19,7 @@ as I build this.
 
 ## Download
 
-Grab the latest release here:
+Grab the initial release here:
 
 - https://github.com/julesian/JFlightShaker/releases
 
