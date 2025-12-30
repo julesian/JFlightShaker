@@ -53,6 +53,7 @@ as I build this.
 3. Launch the app
 4. Select audio output, throttle, and stick devices
 5. Click **Start** to begin monitoring inputs and triggering effects
+6. To Edit effects and bindings, open and edit through configs first, at the moment there is no UI/UX input binding
 
 ---
 
