@@ -102,6 +102,7 @@ Config/
 - Better UI/UX
 - Research: Default Controller ForceFeedback to Effects
 - Editable effects thorugh UI (You can customize through JSON)
+- Adding of custom effects
 - Cleanup AI mess
 
 
