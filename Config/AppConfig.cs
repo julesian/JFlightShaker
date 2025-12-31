@@ -6,8 +6,6 @@ public sealed class AppConfig
 
     // Devices
     public string? SelectedAudioDeviceId { get; set; }
-    public Guid? SelectedThrottleDeviceGuid { get; set; }
-    public Guid? SelectedStickDeviceGuid { get; set; }
 
     // Configs
     public string ThrottleProfilePath { get; set; } = @"profiles\throttle_effect.json";

@@ -1,5 +1,5 @@
 ﻿using System;
-using SharpDX.DirectInput;
+using System.Globalization;
 
 namespace JFlightShaker.Input;
 
@@ -17,13 +17,20 @@ public sealed class GlobalInputLogger
 
     public void LogButton(Guid deviceGuid, int buttonIndex, bool isDown)
     {
-        LastText = $"Last: {(_nameOf(deviceGuid))} Button {buttonIndex} {(isDown ? "DOWN" : "UP")}";
+        var dev = _nameOf(deviceGuid);
+        var state = isDown ? "Down" : "Up";
+        LastText = $"{dev} | Button {buttonIndex} | {state}";
         LastAtMs = Environment.TickCount64;
     }
 
     public void LogAxis(Guid deviceGuid, string axisName, int rawValue)
     {
-        LastText = $"Last: {(_nameOf(deviceGuid))} {axisName} = {rawValue}";
+        var dev = _nameOf(deviceGuid);
+
+        var clamped = Math.Clamp(rawValue, 0, 65535);
+        var normalized = clamped / 65535.0;
+
+        LastText = $"{dev} | {axisName} | {normalized.ToString("0.00", CultureInfo.InvariantCulture)}";
         LastAtMs = Environment.TickCount64;
     }
 }

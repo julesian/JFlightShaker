@@ -6,65 +6,75 @@
         Height="600"
         MinWidth="1054"
         MinHeight="600">
-    <Grid Margin="12">
+
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Row 0: Audio (left) + Start/Stop (right) -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Column="0">
+            <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
                 <TextBlock Text="Audio:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox x:Name="AudioDevices" Width="240"/>
+                <ComboBox x:Name="AudioDevices" Width="340"/>
             </StackPanel>
-            
-            <StackPanel Orientation="Horizontal" Grid.Column="2">
-                <TextBlock Text="Throttle:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox x:Name="ThrottleDevices" Width="310" Margin="0,0,12,0"/>
 
-                <TextBlock Text="Stick:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox x:Name="StickDevices" Width="310"/>
+            <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="StartStopBtn" Content="Start" Width="100"/>
             </StackPanel>
         </Grid>
 
-
+        <!-- Row 1: Last Input -->
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Column="0">
-                <TextBlock Text="Last Input:" FontWeight="Bold" Margin="0,0,8,0"/>
-                <TextBlock x:Name="LastInputLabel" Text="None"/>
-            </StackPanel>
+            <TextBlock Grid.Column="0"
+                       Text="Last Input:"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
 
-            <StackPanel Orientation="Horizontal" Grid.Column="2">
-                <Button x:Name="StartBtn" Content="Start" Width="80" Margin="0,0,8,0"/>
-                <Button x:Name="StopBtn" Content="Stop" Width="80"/>
-            </StackPanel>
+            <TextBlock Grid.Column="1"
+                       x:Name="LastInputLabel"
+                       Text="None"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"/>
         </Grid>
 
+        <!-- Row 2: Bindings grid + action buttons bottom right -->
+        <Grid Grid.Row="2">
+            <DataGrid x:Name="BindingsGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      CanUserAddRows="False"
+                      Margin="0,0,0,32"
+                      MouseDoubleClick="BindingsGrid_MouseDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Effect" Binding="{Binding EffectName}" Width="2*"/>
+                    <DataGridTextColumn Header="Binding" Binding="{Binding BindingText}" Width="3*"/>
+                    <DataGridTextColumn Header="Intensity" Binding="{Binding Intensity}" Width="1*"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
 
-        <DataGrid x:Name="BindingsGrid"
-                  Grid.Row="2"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Device" Binding="{Binding Device}" Width="2*"/>
-                <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="1.2*"/>
-                <DataGridTextColumn Header="Effect" Binding="{Binding Effect}" Width="1*"/>
-                <DataGridTextColumn Header="Intensity" Binding="{Binding Intensity}" Width="0.7*"/>
-                <DataGridTextColumn Header="Live Value" Binding="{Binding ValueText}" Width="2*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom">
+                <Button x:Name="UnbindBtn" Content="Unbind" Width="90" Margin="0,0,8,0" IsEnabled="False"/>
+                <Button x:Name="EditBtn" Content="Edit" Width="90" IsEnabled="False"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

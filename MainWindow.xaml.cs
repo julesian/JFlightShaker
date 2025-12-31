@@ -1,14 +1,16 @@
-﻿using NAudio.CoreAudioApi;
+﻿using JFlightShaker.Audio;
+using JFlightShaker.Config;
+using JFlightShaker.Core;
+using JFlightShaker.Enum;
+using JFlightShaker.Input;
+using JFlightShaker.Service;
+using JFlightShaker.UI;
+using NAudio.CoreAudioApi;
 using SharpDX.DirectInput;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
-using JFlightShaker.Audio;
-using JFlightShaker.Config;
-using JFlightShaker.Core;
-using JFlightShaker.Input;
-using JFlightShaker.Service;
-using JFlightShaker.Enum;
 
 namespace JFlightShaker;
 
@@ -24,6 +26,11 @@ public partial class MainWindow : Window
     private ConfigStoreService? _store;
     private MultiJoystickPoller? _poller;
     private GlobalInputLogger _logger;
+
+    // UI
+    private EffectRow? SelectedEffectRow => BindingsGrid.SelectedItem as EffectRow;
+    private readonly ObservableCollection<EffectRow> _effectRows = new();
+    private bool _isRunning;
 
     // Thread | Timers
     private readonly object _sync = new();
@@ -41,21 +48,28 @@ public partial class MainWindow : Window
     private readonly Dictionary<Guid, bool[]> _prevButtonsByDevice = new();
     private readonly Dictionary<Guid, string> _deviceNamesByGuid = new();
 
-    private readonly ObservableCollection<BindingRow> _bindingRows = new();
     private readonly List<BindingDefinition> _bindings = new();
+
+    private bool _isRestoringSelections;
 
     public MainWindow()
     {
         InitializeComponent();
+        InitializeEffects();
+
         try
         {
             _store = new ConfigStoreService();
             _logger = new GlobalInputLogger(DeviceName);
 
-            BindingsGrid.ItemsSource = _bindingRows;
+            BindingsGrid.ItemsSource = _effectRows;
 
-            StartBtn.Click += (_, _) => Start();
-            StopBtn.Click += (_, _) => Stop();
+            InitializeActionButtons();
+
+            StartStopBtn.Click += (_, _) => ToggleStartStop();
+            UpdateStartStopUI();
+
+            AudioDevices.SelectionChanged += AudioDevices_SelectionChanged;
 
             RefreshDevices();
             LoadActiveProfileAndApply();
@@ -67,14 +81,69 @@ public partial class MainWindow : Window
         }
     }
 
+    private void AudioDevices_SelectionChanged(
+        object sender, 
+        System.Windows.Controls.SelectionChangedEventArgs e
+    )
+    {
+        if (_isRestoringSelections) return;
+        SaveSelectedAudioDevice();
+    }
+
+    private void BindingsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (SelectedEffectRow == null) return;
+
+        if (BindingsGrid.SelectedItem == null) return;
+
+        EditSelectedEffect();
+    }
+
+    private void InitializeEffects()
+    {
+        _effectRows.Clear();
+
+        _effectRows.Add(new EffectRow(
+            RumbleEffectType.ThrottleAxis,
+            "Throttle"
+        ));
+
+        _effectRows.Add(new EffectRow(
+            RumbleEffectType.Gun,
+            "Gun Fire"
+        ));
+    }
+
+    private void InitializeActionButtons()
+    {
+        BindingsGrid.SelectionChanged += (_, _) => UpdateEffectActionButtons();
+
+        EditBtn.Click += (_, _) => EditSelectedEffect();
+        UnbindBtn.Click += (_, _) => UnbindSelectedEffect();
+
+        UpdateEffectActionButtons();
+    }
+
+    private void UpdateEffectActionButtons()
+    {
+        var hasSelection = SelectedEffectRow != null;
+        EditBtn.IsEnabled = hasSelection;
+        UnbindBtn.IsEnabled = hasSelection && SelectedEffectRow!.IsBound;
+    }
+
+
+
     private void RefreshDevices()
     {
         var audio = _audioSvc.GetRenderDevices();
         AudioDevices.ItemsSource = audio;
         AudioDevices.DisplayMemberPath = "FriendlyName";
-        if (AudioDevices.SelectedIndex < 0 && audio.Count > 0) AudioDevices.SelectedIndex = 0;
 
         var joys = _inputSvc.ListJoysticks();
+
+        _deviceNamesByGuid.Clear();
+        foreach (var d in joys)
+            _deviceNamesByGuid[d.InstanceGuid] = d.InstanceName;
 
         var items = joys
             .Select(d => new
@@ -83,57 +152,70 @@ public partial class MainWindow : Window
                 Label = $"{d.InstanceName}  |  {d.InstanceGuid}"
             })
             .ToList();
-
-        ThrottleDevices.ItemsSource = items;
-        ThrottleDevices.DisplayMemberPath = "Label";
-        ThrottleDevices.SelectedValuePath = "Device";
-
-        StickDevices.ItemsSource = items;
-        StickDevices.DisplayMemberPath = "Label";
-        StickDevices.SelectedValuePath = "Device";
-
-        if (ThrottleDevices.SelectedIndex < 0 && ThrottleDevices.Items.Count > 0)
-            ThrottleDevices.SelectedIndex = 0;
-
-        if (StickDevices.SelectedIndex < 0 && StickDevices.Items.Count > 0)
-            StickDevices.SelectedIndex = 0;
     }
 
     private void LoadActiveProfileAndApply()
     {
         _profile = LoadActiveProfile();
+        ApplyBindingsToEffects();
         ApplySavedSelections();
     }
 
     private void ApplySavedSelections()
     {
-        if (_profile.AppConfig.SelectedAudioDeviceId is string aid)
+        _isRestoringSelections = true;
+        try
         {
             var audio = (IEnumerable<MMDevice>)AudioDevices.ItemsSource;
-            var match = audio.FirstOrDefault(x => x.ID == aid);
-            if (match != null) AudioDevices.SelectedItem = match;
-        }
 
-        SelectDeviceByGuid(ThrottleDevices, _profile.AppConfig.SelectedThrottleDeviceGuid);
-        SelectDeviceByGuid(StickDevices, _profile.AppConfig.SelectedStickDeviceGuid);
+            if (_profile.AppConfig.SelectedAudioDeviceId is string aid)
+            {
+                var match = audio.FirstOrDefault(x => x.ID == aid);
+                if (match != null)
+                {
+                    AudioDevices.SelectedItem = match;
+                    return;
+                }
+            }
+
+            // Fallback
+            var first = audio.FirstOrDefault();
+            if (first != null)
+                AudioDevices.SelectedItem = first;
+        }
+        finally
+        {
+            _isRestoringSelections = false;
+        }
     }
 
-    private static void SelectDeviceByGuid(System.Windows.Controls.ComboBox combo, Guid? guid)
+
+    private void ApplyBindingsToEffects()
     {
-        if (guid == null) return;
-
-        var items = combo.ItemsSource as IEnumerable<object>;
-        if (items == null) return;
-
-        var match = items.FirstOrDefault(x =>
+        foreach (var row in _effectRows)
         {
-            var devProp = x.GetType().GetProperty("Device");
-            if (devProp?.GetValue(x) is DeviceInstance dev)
-                return dev.InstanceGuid == guid.Value;
-            return false;
-        });
+            var binding = _profile.Bindings
+                .FirstOrDefault(b => b.Effect == row.Effect);
 
-        if (match != null) combo.SelectedItem = match;
+            if (binding == null || binding.DeviceGuid == null)
+            {
+                row.SetUnbound();
+                continue;
+            }
+
+            string bindingText = binding.Kind switch
+            {
+                BindingKind.Axis =>
+                    $"{DeviceName(binding.DeviceGuid.Value)} / {binding.AxisName}",
+
+                BindingKind.Button =>
+                    $"{DeviceName(binding.DeviceGuid.Value)} / Button {binding.ButtonIndex}",
+
+                _ => "Unknown"
+            };
+
+            row.SetBound(bindingText, binding.Intensity);
+        }
     }
 
 
@@ -156,6 +238,18 @@ public partial class MainWindow : Window
             Bindings = bindings
         };
     }
+    private void UpdateStartStopUI()
+    {
+        StartStopBtn.Content = _isRunning ? "Stop" : "Start";
+    }
+
+    private void ToggleStartStop()
+    {
+        if (_isRunning)
+            Stop();
+        else
+            Start();
+    }
 
     private void Start()
     {
@@ -166,14 +260,25 @@ public partial class MainWindow : Window
 
         _profile = LoadActiveProfile();
 
+        if (_profile.Bindings.Count == 0)
+        {
+            _profile.Bindings = CreateDefaultBindingConfigs(throttleDev, stickDev);
+            _store?.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
+
+            ApplyBindingsToEffects();
+            UpdateEffectActionButtons();
+        }
+
         SetupEngine(audioDev);
         StartPollingDevices();
-        BuildBindingsFromConfig(throttleDev, stickDev);
-        RenderBindings();
-
+        BuildBindingsFromProfile();
+        SetEffectsRunning(true);
         StartEngineTimer();
 
         LastInputLabel.Text = "None";
+
+        _isRunning = true;
+        UpdateStartStopUI();
     }
 
     private bool TryGetSelectedDevices(
@@ -192,21 +297,7 @@ public partial class MainWindow : Window
             return false;
         }
 
-        if (ThrottleDevices.SelectedValue is not DeviceInstance throttle)
-        {
-            MessageBox.Show("Select a Throttle device.");
-            return false;
-        }
-
-        if (StickDevices.SelectedValue is not DeviceInstance stick)
-        {
-            MessageBox.Show("Select a Stick device.");
-            return false;
-        }
-
         audioDevice = audio;
-        throttleDevice = throttle;
-        stickDevice = stick;
         return true;
     }
 
@@ -241,7 +332,7 @@ public partial class MainWindow : Window
         _poller.Start(5);
     }
 
-    private void BuildBindingsFromConfig(DeviceInstance throttleDevice, DeviceInstance stickDevice)
+    private void BuildBindingsFromProfile()
     {
         lock (_sync)
         {
@@ -249,18 +340,14 @@ public partial class MainWindow : Window
             _prevButtonsByDevice.Clear();
             _latestStateByDevice.Clear();
 
-            if (_profile.Bindings.Count == 0)
-            {
-                _profile.Bindings = CreateDefaultBindingConfigs(throttleDevice, stickDevice);
-                _store.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
-            }
-
             foreach (var config in _profile.Bindings)
             {
+                if (config.DeviceGuid == null) continue;
+
                 _bindings.Add(new BindingDefinition
                 {
-                    DeviceGuid = config.DeviceGuid,
-                    DeviceName = DeviceName(config.DeviceGuid),
+                    DeviceGuid = config.DeviceGuid.Value,
+                    DeviceName = DeviceName(config.DeviceGuid.Value),
                     Kind = config.Kind,
                     AxisName = config.AxisName,
                     ButtonIndex = config.ButtonIndex,
@@ -271,7 +358,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private List<BindingConfig> CreateDefaultBindingConfigs(DeviceInstance throttleDevice, DeviceInstance stickDevice)
+
+    private List<BindingConfig> CreateDefaultBindingConfigs(
+        DeviceInstance throttleDevice,
+        DeviceInstance stickDevice
+    )
     {
         var axisName = _profile.ThrottleSettings.DefaultAxisName;
         var gunButton = _profile.GunSettings.DefaultButtonIndex;
@@ -300,14 +391,10 @@ public partial class MainWindow : Window
     }
 
 
-    private void RenderBindings()
+    private void SetEffectsRunning(bool isRunning)
     {
-        _bindingRows.Clear();
-        lock (_sync)
-        {
-            foreach (var b in _bindings)
-                _bindingRows.Add(new BindingRow(b));
-        }
+        foreach (var row in _effectRows)
+            row.SetRunning(isRunning);
     }
 
     private void StartEngineTimer()
@@ -332,19 +419,6 @@ public partial class MainWindow : Window
         {
             LastInputLabel.Text = _logger.LastText;
         });
-
-        foreach (var row in _bindingRows.Where(r => r.Def.DeviceGuid == deviceGuid))
-        {
-            if (row.Def.Kind == BindingKind.Button && row.Def.ButtonIndex is int bi)
-            {
-                var buttons = state.Buttons ?? Array.Empty<bool>();
-                row.ValueText = (bi >= 0 && bi < buttons.Length) ? (buttons[bi] ? "DOWN" : "UP") : "OUT OF RANGE";
-            }
-            else if (row.Def.Kind == BindingKind.Axis && row.Def.AxisName != null)
-            {
-                row.ValueText = $"{row.Def.AxisName}: {GetAxisRaw(state, row.Def.AxisName)}";
-            }
-        }
     }
 
     private void HandleTransitionsAndLogger(Guid deviceGuid, JoystickState state)
@@ -377,7 +451,10 @@ public partial class MainWindow : Window
         Array.Copy(buttons, prev, buttons.Length);
     }
 
-    private void OnButtonPressed(Guid deviceGuid, int buttonIndex)
+    private void OnButtonPressed(
+        Guid deviceGuid, 
+        int buttonIndex
+    )
     {
         List<BindingDefinition> matches;
 
@@ -463,13 +540,16 @@ public partial class MainWindow : Window
     
     private void Stop()
     {
+        SetEffectsRunning(false);
         StopEngineTimer();
         StopPolling();
         ClearRuntimeState();
-        ClearBindingsUI();
         DisposeEngine();
 
         LastInputLabel.Text = "None";
+
+        _isRunning = false;
+        UpdateStartStopUI();
     }
 
 
@@ -501,11 +581,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ClearBindingsUI()
-    {
-        Dispatcher.Invoke(() => _bindingRows.Clear());
-    }
-
     private void DisposeEngine()
     {
         _engine?.Dispose();
@@ -528,4 +603,90 @@ public partial class MainWindow : Window
         _store.SaveProfile(_profile.AppConfig.GunProfilePath, _profile.GunSettings);
         _store.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
     }
+
+    private void SaveSelectedAudioDevice()
+    {
+        if (_store == null) return;
+
+        if (AudioDevices.SelectedItem is MMDevice audio)
+        {
+            _profile.AppConfig.SelectedAudioDeviceId = audio.ID;
+            _store.SaveAppConfig(_profile.AppConfig);
+        }
+    }
+
+    private void UnbindSelectedEffect()
+    {
+        var row = SelectedEffectRow;
+        if (row == null) return;
+
+        var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
+        if (binding == null) return;
+
+        // Clear Binding
+        binding.DeviceGuid = null;
+        binding.AxisName = null;
+        binding.ButtonIndex = null;
+
+        _store?.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
+
+        BuildBindingsFromProfile();
+        ApplyBindingsToEffects();
+        UpdateEffectActionButtons();
+    }
+
+    private void EditSelectedEffect()
+    {
+        var row = SelectedEffectRow;
+        if (row == null) return;
+
+        var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
+        if (binding == null)
+        {
+            binding = new BindingConfig { Effect = row.Effect, Kind = BindingKind.Axis, Intensity = 1f };
+            _profile.Bindings.Add(binding);
+        }
+
+        var devices = _deviceNamesByGuid
+            .Select(kv => new DeviceOption { Guid = kv.Key, Name = kv.Value })
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        var win = new EditBindingWindow(
+            devices,
+            TryOpenJoystick,
+            binding,
+            row.EffectName
+        )
+        {
+            Owner = this
+        };
+
+        var ok = win.ShowDialog() == true;
+        if (!ok) return;
+
+        _store?.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
+
+        BuildBindingsFromProfile();
+        ApplyBindingsToEffects();
+        UpdateEffectActionButtons();
+    }
+
+
+    private Joystick? TryOpenJoystick(Guid guid)
+    {
+        try
+        {
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            var di = _inputSvc.ListJoysticks().FirstOrDefault(x => x.InstanceGuid == guid);
+            if (di.InstanceGuid == Guid.Empty) return null;
+
+            return _inputSvc.Open(di, hwnd);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 }
