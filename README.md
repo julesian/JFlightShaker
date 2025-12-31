@@ -18,6 +18,8 @@ as I build this.*
 
 ---
 
+<img width="1037" height="590" alt="jflightshaker_screenshot" src="https://github.com/user-attachments/assets/41b17ce6-b153-47c6-8342-8794f6cea733" />
+
 ## Download
 
 Grab the initial release here:
