@@ -5,7 +5,7 @@ arcade-style flight-sim rumble effects using audio bass shakers.
 
 I wanted something similar to the effects I get in **Microsoft Flight Simulator 2024**
 with SimHub, but since SimHub can’t run custom bass-shaker effects while
-**Project Wingman** or **Ace Combat** is running, I built my own solution.
+**Project Wingman**, **Ace Combat**, **Star Citizen** is running, I built my own solution.
 
 Instead of reading game telemetry, JFlightShaker generates **simulated effects**
 directly from controller input — making it game-agnostic and lightweight.
@@ -102,6 +102,9 @@ Config/
 - Better UI/UX
 - Research: Default Controller ForceFeedback to Effects
 - Editable effects thorugh UI (You can customize through JSON)
+- Turning on / off effects via controller buttons / switch
+	- *Can't have the idle vibration while I'm walking on Star Citizen*
+- Customizable gun interval
 - Adding of custom effects
 - Cleanup AI mess
 
