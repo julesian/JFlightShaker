@@ -22,11 +22,13 @@ public partial class EditBindingWindow : Window
     private readonly IReadOnlyList<DeviceOption> _devices;
     private readonly Func<Guid, Joystick?> _openJoystick;
     private readonly BindingConfig _binding;
+    private readonly IReadOnlyList<BindingKind> _allowedKinds;
 
     public EditBindingWindow(
         IReadOnlyList<DeviceOption> devices,
         Func<Guid, Joystick?> openJoystick,
         BindingConfig binding,
+        IReadOnlyList<BindingKind> allowedKinds,
         string effectName
     )
     {
@@ -37,9 +39,10 @@ public partial class EditBindingWindow : Window
         _devices = devices;
         _openJoystick = openJoystick;
         _binding = binding;
+        _allowedKinds = allowedKinds;
 
         DeviceCombo.ItemsSource = _devices;
-        KindCombo.ItemsSource = new[] { BindingKind.Axis, BindingKind.Button };
+        KindCombo.ItemsSource = _allowedKinds.ToArray();
 
         DeviceCombo.SelectionChanged += (_, _) => OnDeviceChanged();
         KindCombo.SelectionChanged += (_, _) => OnKindChanged();
@@ -73,7 +76,9 @@ public partial class EditBindingWindow : Window
             DeviceCombo.SelectedIndex = 0;
 
         // Kind
-        KindCombo.SelectedItem = _binding.Kind;
+        KindCombo.SelectedItem = _allowedKinds.Contains(_binding.Kind)
+            ? _binding.Kind
+            : _allowedKinds.FirstOrDefault();
 
         // Intensity
         IntensitySlider.Value = Math.Clamp(_binding.Intensity, 0f, 1f);

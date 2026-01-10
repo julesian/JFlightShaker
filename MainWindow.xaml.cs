@@ -198,30 +198,48 @@ public partial class MainWindow : Window
     {
         foreach (var row in _effectRows)
         {
-            var binding = _profile.Bindings
-                .FirstOrDefault(b => b.Effect == row.Effect);
+            var allowedKinds = GetAllowedKinds(row.Effect);
+            var bindings = _profile.Bindings
+                .Where(b => b.Effect == row.Effect)
+                .Where(b => b.DeviceGuid != null)
+                .Where(b => allowedKinds.Contains(b.Kind))
+                .ToList();
 
-            if (binding == null || binding.DeviceGuid == null)
+            if (bindings.Count == 0)
             {
                 row.SetUnbound();
                 continue;
             }
 
-            string bindingText = binding.Kind switch
+            var kinds = bindings
+                .Select(b => b.Kind)
+                .Distinct()
+                .OrderBy(k => k.ToString())
+                .ToList();
+
+            if (kinds.Count == 1)
             {
-                BindingKind.Axis =>
-                    $"{DeviceName(binding.DeviceGuid.Value)} / {binding.AxisName}",
+                var binding = bindings.First();
+                string bindingText = binding.Kind switch
+                {
+                    BindingKind.Axis =>
+                        $"{DeviceName(binding.DeviceGuid!.Value)} / {binding.AxisName}",
 
-                BindingKind.Button =>
-                    $"{DeviceName(binding.DeviceGuid.Value)} / Button {binding.ButtonIndex}",
+                    BindingKind.Button =>
+                        $"{DeviceName(binding.DeviceGuid!.Value)} / Button {binding.ButtonIndex}",
 
-                _ => "Unknown"
-            };
+                    _ => "Unknown"
+                };
 
-            row.SetBound(bindingText, binding.Intensity);
+                row.SetBound(bindingText, binding.Intensity);
+            }
+            else
+            {
+                var kindLabel = string.Join(" + ", kinds);
+                row.SetBound($"Multiple ({kindLabel})", 0f);
+            }
         }
     }
-
 
     private string DeviceName(Guid guid)
         => _deviceNamesByGuid.TryGetValue(guid, out var n) ? n : guid.ToString();
@@ -347,6 +365,7 @@ public partial class MainWindow : Window
             foreach (var config in _profile.Bindings)
             {
                 if (config.DeviceGuid == null) continue;
+                if (!IsKindAllowed(config.Effect, config.Kind)) continue;
 
                 _bindings.Add(new BindingDefinition
                 {
@@ -364,7 +383,6 @@ public partial class MainWindow : Window
             }
         }
     }
-
 
     private List<BindingConfig> CreateDefaultBindingConfigs(
         DeviceInstance throttleDevice,
@@ -628,13 +646,16 @@ public partial class MainWindow : Window
         var row = SelectedEffectRow;
         if (row == null) return;
 
-        var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
-        if (binding == null) return;
+        var bindings = _profile.Bindings.Where(b => b.Effect == row.Effect).ToList();
+        if (bindings.Count == 0) return;
 
-        // Clear Binding
-        binding.DeviceGuid = null;
-        binding.AxisName = null;
-        binding.ButtonIndex = null;
+        foreach (var binding in bindings)
+        {
+            // Clear Binding
+            binding.DeviceGuid = null;
+            binding.AxisName = null;
+            binding.ButtonIndex = null;
+        }
 
         _store?.SaveBindings(_profile.AppConfig.BindingsPath, _profile.Bindings);
 
@@ -648,11 +669,23 @@ public partial class MainWindow : Window
         var row = SelectedEffectRow;
         if (row == null) return;
 
+        var allowedKinds = GetAllowedKinds(row.Effect);
+        var defaultKind = allowedKinds.First();
+
         var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
         if (binding == null)
         {
             binding = new BindingConfig { Effect = row.Effect, Kind = BindingKind.Axis, Intensity = 1f };
+            binding = new BindingConfig { Effect = row.Effect, Kind = defaultKind, Intensity = 1f };
             _profile.Bindings.Add(binding);
+        }
+        else if (!allowedKinds.Contains(binding.Kind))
+        {
+            binding.Kind = defaultKind;
+            binding.AxisName = null;
+            binding.AxisMin = null;
+            binding.AxisMax = null;
+            binding.ButtonIndex = null;
         }
 
         var devices = _deviceNamesByGuid
@@ -664,6 +697,7 @@ public partial class MainWindow : Window
             devices,
             TryOpenJoystick,
             binding,
+            allowedKinds,
             row.EffectName
         )
         {
@@ -696,5 +730,17 @@ public partial class MainWindow : Window
             return null;
         }
     }
+    private static IReadOnlyList<BindingKind> GetAllowedKinds(RumbleEffectType effect)
+    {
+        return effect switch
+        {
+            RumbleEffectType.ThrottleAxis => new[] { BindingKind.Axis },
+            RumbleEffectType.Gun => new[] { BindingKind.Button },
+            _ => new[] { BindingKind.Axis }
+        };
+    }
 
+    private static bool IsKindAllowed(RumbleEffectType effect, BindingKind kind)
+        => GetAllowedKinds(effect).Contains(kind);
+    
 }
