@@ -554,7 +554,7 @@ public partial class MainWindow : Window
                 x.Kind == BindingKind.Button &&
                 x.DeviceGuid == deviceGuid &&
                 x.ButtonIndex == buttonIndex &&
-                x.Effect == RumbleEffectType.Gun
+                (x.Effect == RumbleEffectType.Gun || x.Effect == RumbleEffectType.MuteEffects)
             ).ToList();
 
             foreach (var b in matches)
@@ -613,7 +613,7 @@ public partial class MainWindow : Window
     {
         if (_isMuted == muted) return;
         _isMuted = muted;
-        Dispatcher.BeginInvoke(UpdateEffectStatuses);
+        Dispatcher.BeginInvoke(() => UpdateEffectStatuses());
     }
 
     private void EngineTick()
