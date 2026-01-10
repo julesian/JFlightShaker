@@ -22,7 +22,14 @@ public sealed class BindingEvaluator
         int raw = GetAxisRaw(state, binding.AxisName);
         float norm = Math.Clamp(raw / 65535f, 0f, 1f);
 
-        if (_settings.InvertAxis)
+        float axisMin = Math.Clamp(binding.AxisMin ?? 0f, 0f, 1f);
+        float axisMax = Math.Clamp(binding.AxisMax ?? 1f, 0f, 1f);
+        if (axisMax > axisMin)
+            norm = Math.Clamp((norm - axisMin) / (axisMax - axisMin), 0f, 1f);
+        else
+            norm = 0f;
+
+        if (_settings.InvertAxis || binding.InvertAxis)
             norm = 1f - norm;
 
         float deadzone = Math.Clamp(_settings.Deadzone, 0f, 0.95f);

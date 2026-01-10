@@ -8,7 +8,14 @@ public sealed class BindingDefinition
 
     public string DeviceName { get; init; } = "";
     public BindingKind Kind { get; init; }
+
+    // Axis
     public string? AxisName { get; init; }
+    public float? AxisMin { get; init; }
+    public float? AxisMax { get; init; }
+    public bool InvertAxis { get; init; }
+
+    // Button
     public int? ButtonIndex { get; init; }
 
     public RumbleEffectType Effect { get; init; } = RumbleEffectType.None;

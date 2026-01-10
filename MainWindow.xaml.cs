@@ -354,6 +354,9 @@ public partial class MainWindow : Window
                     DeviceName = DeviceName(config.DeviceGuid.Value),
                     Kind = config.Kind,
                     AxisName = config.AxisName,
+                    AxisMin = config.AxisMin,
+                    AxisMax = config.AxisMax,
+                    InvertAxis = config.InvertAxis,
                     ButtonIndex = config.ButtonIndex,
                     Effect = config.Effect,
                     Intensity = config.Intensity
