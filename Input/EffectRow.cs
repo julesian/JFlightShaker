@@ -67,6 +67,11 @@ public sealed class EffectRow : INotifyPropertyChanged
         StatusText = running ? "Running" : "Stopped";
     }
 
+    public void SetStatus(string status)
+    {
+        StatusText = status;
+    }
+
     private void Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {
         if (Equals(field, value)) return;

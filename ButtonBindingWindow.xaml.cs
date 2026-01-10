@@ -1,12 +1,23 @@
 ﻿using JFlightShaker.Config;
+using JFlightShaker.Enum;
 using JFlightShaker.Input;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 
 namespace JFlightShaker.UI;
 
 public partial class ButtonBindingWindow : Window
 {
+    private sealed class TriggerOption
+    {
+        public TriggerType Trigger { get; init; }
+        public string Label { get; init; } = "";
+
+        public override string ToString() => Label;
+    }
+
     private readonly BindingConfig _binding;
     private readonly Guid _deviceGuid;
     private IDisposable? _subscription;
@@ -35,6 +46,12 @@ public partial class ButtonBindingWindow : Window
             _subscription = null;
         };
 
+        TriggerCombo.ItemsSource = new List<TriggerOption>
+        {
+            new() { Trigger = TriggerType.Hold, Label = "Hold" },
+            new() { Trigger = TriggerType.Press, Label = "Trigger" }
+        };
+
         LoadState();
         UpdateListenUI();
     }
@@ -44,6 +61,20 @@ public partial class ButtonBindingWindow : Window
         ButtonTextBox.Text = _binding.ButtonIndex is int bi
             ? bi.ToString(CultureInfo.InvariantCulture)
             : "";
+
+        var allowed = EffectBindingRules.GetAllowedTriggers(_binding.Effect);
+        if (!allowed.Contains(_binding.Trigger))
+            _binding.Trigger = allowed.FirstOrDefault();
+
+        TriggerCombo.SelectedItem = TriggerCombo.ItemsSource is IEnumerable<TriggerOption> options
+            ? options.FirstOrDefault(o => o.Trigger == _binding.Trigger) ?? options.FirstOrDefault()
+            : null;
+
+        if (allowed.Count <= 1)
+        {
+            TriggerCombo.IsEnabled = false;
+            TriggerLabel.Opacity = 0.6;
+        }
     }
 
     private void ToggleListen()
@@ -84,6 +115,11 @@ public partial class ButtonBindingWindow : Window
         }
 
         _binding.ButtonIndex = bi;
+
+        if (TriggerCombo.SelectedItem is TriggerOption option)
+        {
+            _binding.Trigger = option.Trigger;
+        }
 
         // enforce one scheme
         _binding.AxisName = null;

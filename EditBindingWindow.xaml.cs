@@ -108,12 +108,14 @@ public partial class EditBindingWindow : Window
         if (kind == BindingKind.Axis)
         {
             _binding.ButtonIndex = null;
+            _binding.Trigger = TriggerType.Hold;
         }
         else
         {
             _binding.AxisName = null;
             _binding.AxisMin = null;
             _binding.AxisMax = null;
+            ClampTrigger();
         }
     }
 
@@ -136,7 +138,7 @@ public partial class EditBindingWindow : Window
         _binding.DeviceName = dev.Name;
         _binding.Kind = kind.Value;
 
-        Window? editor = kind switch
+        Window? editor = kind.Value switch
         {
             BindingKind.Axis => new AxisBindingWindow(_devices, _openJoystick, _binding) { Owner = this },
 
@@ -154,7 +156,7 @@ public partial class EditBindingWindow : Window
         var ok = editor.ShowDialog() == true;
         if (!ok) return;
 
-        if (kind == BindingKind.Axis)
+        if (kind.Value == BindingKind.Axis)
         {
             _binding.ButtonIndex = null;
         }
@@ -164,6 +166,7 @@ public partial class EditBindingWindow : Window
             _binding.AxisMin = null;
             _binding.AxisMax = null;
             _binding.InvertAxis = false;
+            ClampTrigger();
         }
 
         RefreshKindOptions();
@@ -245,7 +248,7 @@ public partial class EditBindingWindow : Window
         _binding.Kind = kind.Value;
         _binding.Intensity = (float)IntensitySlider.Value;
 
-        if (kind == BindingKind.Axis)
+        if (kind.Value == BindingKind.Axis)
         {
             _binding.ButtonIndex = null;
 
@@ -260,6 +263,8 @@ public partial class EditBindingWindow : Window
             _binding.AxisMin = null;
             _binding.AxisMax = null;
             _binding.InvertAxis = false;
+            ClampTrigger();
+
             if (_binding.ButtonIndex is null)
             {
                 MessageBox.Show("Select a button with Edit Control.");
@@ -273,7 +278,7 @@ public partial class EditBindingWindow : Window
 
     private void RefreshKindOptions()
     {
-        var selectedKind = GetSelectedKind() ?? _binding.Kind;
+        var selectedKind = GetSelectedKind();
         var options = _allowedKinds
             .Select(kind => new KindOption
             {
@@ -283,7 +288,7 @@ public partial class EditBindingWindow : Window
             .ToList();
 
         KindCombo.ItemsSource = options;
-        SelectKind(selectedKind);
+        SelectKind(selectedKind ?? _binding.Kind);
     }
 
     private void SelectKind(BindingKind? kind)
@@ -306,5 +311,12 @@ public partial class EditBindingWindow : Window
 
         axisName = string.IsNullOrWhiteSpace(axisName) ? "RotationX" : axisName;
         return $"Axis | {axisName}";
+    }
+    
+    private void ClampTrigger()
+    {
+        var allowed = EffectBindingRules.GetAllowedTriggers(_binding.Effect);
+        if (!allowed.Contains(_binding.Trigger))
+            _binding.Trigger = allowed.FirstOrDefault();
     }
 }

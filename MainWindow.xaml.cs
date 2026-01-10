@@ -48,6 +48,9 @@ public partial class MainWindow : Window
 
     // Controller Event States
     private readonly Dictionary<(Guid dev, int btn), RumbleEffect> _activeHolds = new();
+    private readonly HashSet<(Guid dev, int btn)> _activeMuteHolds = new();
+    private bool _muteToggleActive;
+    private bool _isMuted;
 
     // Device States
     private readonly Dictionary<Guid, JoystickState> _latestStateByDevice = new();
@@ -109,6 +112,7 @@ public partial class MainWindow : Window
 
     private void InitializeEffects()
     {
+        // TODO: Later on make this dynamic via reflection or config file
         _effectRows.Clear();
 
         _effectRows.Add(new EffectRow(
@@ -119,6 +123,11 @@ public partial class MainWindow : Window
         _effectRows.Add(new EffectRow(
             RumbleEffectType.Gun,
             "Gun Fire"
+        ));
+
+        _effectRows.Add(new EffectRow(
+            RumbleEffectType.MuteEffects,
+            "Mute Effects"
         ));
     }
 
@@ -228,7 +237,7 @@ public partial class MainWindow : Window
                         $"{DeviceName(binding.DeviceGuid!.Value)} / {binding.AxisName}",
 
                     BindingKind.Button =>
-                        $"{DeviceName(binding.DeviceGuid!.Value)} / Button {binding.ButtonIndex}",
+                        $"{DeviceName(binding.DeviceGuid!.Value)} / Button {binding.ButtonIndex} ({GetTriggerLabel(binding.Trigger)})",
 
                     _ => "Unknown"
                 };
@@ -241,10 +250,15 @@ public partial class MainWindow : Window
                 row.SetBound($"Multiple ({kindLabel})", 0f);
             }
         }
+
+        UpdateEffectStatuses();
     }
 
     private string DeviceName(Guid guid)
         => _deviceNamesByGuid.TryGetValue(guid, out var n) ? n : guid.ToString();
+
+    private static string GetTriggerLabel(TriggerType trigger)
+    => trigger == TriggerType.Press ? "Press" : "Hold";
 
     private ActiveProfile LoadActiveProfile()
     {
@@ -396,7 +410,8 @@ public partial class MainWindow : Window
                     InvertAxis = config.InvertAxis,
                     ButtonIndex = config.ButtonIndex,
                     Effect = config.Effect,
-                    Intensity = config.Intensity
+                    Intensity = config.Intensity,
+                    Trigger = config.Trigger
                 });
             }
         }
@@ -419,7 +434,8 @@ public partial class MainWindow : Window
             DeviceGuid = throttleDevice.InstanceGuid,
             AxisName = axisName,
             Effect = RumbleEffectType.ThrottleAxis,
-            Intensity = 1.0f
+            Intensity = 1.0f,
+            Trigger = TriggerType.Hold
         },
         new BindingConfig
         {
@@ -428,7 +444,8 @@ public partial class MainWindow : Window
             DeviceGuid = stickDevice.InstanceGuid,
             ButtonIndex = gunButton,
             Effect = RumbleEffectType.Gun,
-            Intensity = 0.5f
+            Intensity = 0.5f,
+            Trigger = TriggerType.Hold
         }
     };
     }
@@ -436,8 +453,36 @@ public partial class MainWindow : Window
 
     private void SetEffectsRunning(bool isRunning)
     {
+        UpdateEffectStatuses(isRunning);
+    }
+
+    private void UpdateEffectStatuses(bool? runningOverride = null)
+    {
+        var running = runningOverride ?? _isRunning;
+        var muted = _isMuted;
+
         foreach (var row in _effectRows)
-            row.SetRunning(isRunning);
+        {
+            if (!running)
+            {
+                row.SetStatus("Stopped");
+                continue;
+            }
+
+            if (row.Effect == RumbleEffectType.MuteEffects)
+            {
+                row.SetStatus(muted ? "On" : "Off");
+                continue;
+            }
+
+            if (muted)
+            {
+                row.SetStatus("Muted");
+                continue;
+            }
+
+            row.SetStatus("Running");
+        }
     }
 
     private void StartEngineTimer()
@@ -501,6 +546,7 @@ public partial class MainWindow : Window
     )
     {
         List<BindingDefinition> matches;
+        bool muted;
 
         lock (_sync)
         {
@@ -514,25 +560,60 @@ public partial class MainWindow : Window
             foreach (var b in matches)
             {
                 var key = (deviceGuid, buttonIndex);
-                if (_activeHolds.ContainsKey(key)) continue;
+                if (b.Effect == RumbleEffectType.Gun)
+                {
+                    if (_activeHolds.ContainsKey(key)) continue;
 
-                var fx = new GunHoldEffect(b.Intensity, _profile.GunSettings);
-                _activeHolds[key] = fx;
-                _mixer.Add(fx);
+                    var fx = new GunHoldEffect(b.Intensity, _profile.GunSettings);
+                    _activeHolds[key] = fx;
+                    _mixer.Add(fx);
+                }
+                else if (b.Effect == RumbleEffectType.MuteEffects)
+                {
+                    if (b.Trigger == TriggerType.Press)
+                    {
+                        _muteToggleActive = !_muteToggleActive;
+                    }
+                    else
+                    {
+                        _activeMuteHolds.Add(key);
+                    }
+                }
             }
+
+            muted = _muteToggleActive || _activeMuteHolds.Count > 0;
         }
+
+        UpdateMuteState(muted);
     }
     private void OnButtonReleased(Guid deviceGuid, int buttonIndex)
     {
+        bool muted;
+
         lock (_sync)
         {
             var key = (deviceGuid, buttonIndex);
+
             if (_activeHolds.TryGetValue(key, out var fx))
             {
                 fx.Stop();
                 _activeHolds.Remove(key);
             }
+
+            if (_activeMuteHolds.Contains(key))
+                _activeMuteHolds.Remove(key);
+
+            muted = _muteToggleActive || _activeMuteHolds.Count > 0;
         }
+
+        UpdateMuteState(muted);
+    }
+
+    private void UpdateMuteState(bool muted)
+    {
+        if (_isMuted == muted) return;
+        _isMuted = muted;
+        Dispatcher.BeginInvoke(UpdateEffectStatuses);
     }
 
     private void EngineTick()
@@ -548,6 +629,7 @@ public partial class MainWindow : Window
         float axisSum = 0f;
         bool enabled = true;
         float effects;
+        bool muted;
 
         lock (_sync)
         {
@@ -562,25 +644,16 @@ public partial class MainWindow : Window
             }
 
             effects = _mixer.Update(dt);
+            muted = _isMuted;
         }
 
         float total = Math.Clamp(axisSum + effects, 0f, 1f);
+        if (muted)
+            total = 0f;
+
         _engine.Enabled = enabled;
         _engine.SetTargetAmplitude(total);
     }
-
-    private static int GetAxisRaw(JoystickState s, string axisName) => axisName switch
-    {
-        "X" => s.X,
-        "Y" => s.Y,
-        "Z" => s.Z,
-        "RotationX" => s.RotationX,
-        "RotationY" => s.RotationY,
-        "RotationZ" => s.RotationZ,
-        "Slider0" => (s.Sliders != null && s.Sliders.Length > 0) ? s.Sliders[0] : 0,
-        "Slider1" => (s.Sliders != null && s.Sliders.Length > 1) ? s.Sliders[1] : 0,
-        _ => 0
-    };
     
     private void Stop()
     {
@@ -618,6 +691,9 @@ public partial class MainWindow : Window
         {
             _mixer.StopAll();
             _activeHolds.Clear();
+            _activeMuteHolds.Clear();
+            _muteToggleActive = false;
+            _isMuted = false;
 
             _latestStateByDevice.Clear();
             _prevButtonsByDevice.Clear();

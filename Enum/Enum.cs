@@ -10,7 +10,8 @@ public enum RumbleEffectType
 {
     None,
     Gun,
-    ThrottleAxis
+    ThrottleAxis,
+    MuteEffects
 }
 
 public enum TriggerType

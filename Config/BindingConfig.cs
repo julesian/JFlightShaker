@@ -19,6 +19,7 @@ public sealed class BindingConfig
 
     // Button
     public int? ButtonIndex { get; set; }
+    public TriggerType Trigger { get; set; } = TriggerType.Hold;
 
     // Effect
     public RumbleEffectType Effect { get; set; }
