@@ -102,8 +102,6 @@ Config/
 - Better UI/UX
 - Research: Default Controller ForceFeedback to Effects
 - Editable effects thorugh UI (You can customize through JSON)
-- Turning on / off effects via controller buttons / switch
-	- *Can't have the idle vibration while I'm walking on Star Citizen*
 - Customizable gun interval
 - Adding of custom effects
 
