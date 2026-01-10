@@ -136,23 +136,13 @@ public partial class EditBindingWindow : Window
         _binding.DeviceName = dev.Name;
         _binding.Kind = kind.Value;
 
-        var main = Owner as MainWindow;
-        if (main == null)
-        {
-            MessageBox.Show("Main window not found.");
-            return;
-        }
-
         Window? editor = kind switch
         {
             BindingKind.Axis => new AxisBindingWindow(_devices, _openJoystick, _binding) { Owner = this },
 
             BindingKind.Button => new ButtonBindingWindow(
                 _binding,
-                dev.Guid,
-                () => main.IsRunning,
-                handler => main.ButtonPressedEdge += handler,
-                handler => main.ButtonPressedEdge -= handler
+                dev.Guid
             )
             { Owner = this },
 

@@ -1,4 +1,5 @@
 ﻿using JFlightShaker.Config;
+using JFlightShaker.Input;
 using System.Globalization;
 using System.Windows;
 
@@ -8,26 +9,18 @@ public partial class ButtonBindingWindow : Window
 {
     private readonly BindingConfig _binding;
     private readonly Guid _deviceGuid;
-    private readonly Func<bool> _isRunning;
-    private readonly Action<Action<Guid, int>> _subscribe;
-    private readonly Action<Action<Guid, int>> _unsubscribe;
+    private IDisposable? _subscription;
 
     private bool _isListening;
 
     public ButtonBindingWindow(
         BindingConfig binding,
-        Guid deviceGuid,
-        Func<bool> isRunning,
-        Action<Action<Guid, int>> subscribe,
-        Action<Action<Guid, int>> unsubscribe)
+        Guid deviceGuid)
     {
         InitializeComponent();
 
         _binding = binding;
         _deviceGuid = deviceGuid;
-        _isRunning = isRunning;
-        _subscribe = subscribe;
-        _unsubscribe = unsubscribe;
 
         Title = "Edit Button";
 
@@ -35,8 +28,12 @@ public partial class ButtonBindingWindow : Window
         CancelBtn.Click += (_, _) => { DialogResult = false; Close(); };
         SaveBtn.Click += (_, _) => OnSave();
 
-        Loaded += (_, _) => _subscribe(OnButtonPressedEdge);
-        Closed += (_, _) => _unsubscribe(OnButtonPressedEdge);
+        Loaded += (_, _) => _subscription = InputPollingService.Shared.ListenForButtons(this, OnButtonPressedEdge);
+        Closed += (_, _) =>
+        {
+            _subscription?.Dispose();
+            _subscription = null;
+        };
 
         LoadState();
         UpdateListenUI();
@@ -51,25 +48,18 @@ public partial class ButtonBindingWindow : Window
 
     private void ToggleListen()
     {
-        // if not running, don't enter listening mode
-        if (!_isRunning())
-        {
-            System.Windows.MessageBox.Show("Start the app first to listen for button input.");
-            _isListening = false;
-            UpdateListenUI();
-            return;
-        }
-
         _isListening = !_isListening;
+
+        if (_isListening)
+            InputPollingService.Shared.ArmListening(_deviceGuid);
+
         UpdateListenUI();
     }
 
     private void UpdateListenUI()
     {
-        if (!_isRunning()) _isListening = false;
-
         ListenBtn.Content = _isListening ? "Listening..." : "Listen";
-        ListenBtn.IsEnabled = true; // keep clickable; we show message if stopped
+        ListenBtn.IsEnabled = true;
     }
 
     private void OnButtonPressedEdge(Guid guid, int buttonIndex)
