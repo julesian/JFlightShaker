@@ -2,7 +2,7 @@
 
 public sealed class AppConfig
 {
-    public String Version { get; set; } = "0.0.1";
+    public String Version { get; set; } = "0.1.0";
 
     // Devices
     public string? SelectedAudioDeviceId { get; set; }
