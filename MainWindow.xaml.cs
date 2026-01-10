@@ -198,7 +198,7 @@ public partial class MainWindow : Window
     {
         foreach (var row in _effectRows)
         {
-            var allowedKinds = GetAllowedKinds(row.Effect);
+            var allowedKinds = EffectBindingRules.GetAllowedKinds(row.Effect);
             var bindings = _profile.Bindings
                 .Where(b => b.Effect == row.Effect)
                 .Where(b => b.DeviceGuid != null)
@@ -365,7 +365,7 @@ public partial class MainWindow : Window
             foreach (var config in _profile.Bindings)
             {
                 if (config.DeviceGuid == null) continue;
-                if (!IsKindAllowed(config.Effect, config.Kind)) continue;
+                if (!EffectBindingRules.IsKindAllowed(config.Effect, config.Kind)) continue;
 
                 _bindings.Add(new BindingDefinition
                 {
@@ -669,7 +669,7 @@ public partial class MainWindow : Window
         var row = SelectedEffectRow;
         if (row == null) return;
 
-        var allowedKinds = GetAllowedKinds(row.Effect);
+        var allowedKinds = EffectBindingRules.GetAllowedKinds(row.Effect);
         var defaultKind = allowedKinds.First();
 
         var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
@@ -730,17 +730,5 @@ public partial class MainWindow : Window
             return null;
         }
     }
-    private static IReadOnlyList<BindingKind> GetAllowedKinds(RumbleEffectType effect)
-    {
-        return effect switch
-        {
-            RumbleEffectType.ThrottleAxis => new[] { BindingKind.Axis },
-            RumbleEffectType.Gun => new[] { BindingKind.Button },
-            _ => new[] { BindingKind.Axis }
-        };
-    }
-
-    private static bool IsKindAllowed(RumbleEffectType effect, BindingKind kind)
-        => GetAllowedKinds(effect).Contains(kind);
     
 }
