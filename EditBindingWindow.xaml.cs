@@ -17,19 +17,29 @@ public sealed class DeviceOption
     public override string ToString() => Name;
 }
 
+public sealed class KindOption
+{
+    public BindingKind Kind { get; init; }
+    public string Label { get; init; } = "";
+
+    public override string ToString() => Label;
+}
+
 public partial class EditBindingWindow : Window
 {
     private readonly IReadOnlyList<DeviceOption> _devices;
     private readonly Func<Guid, Joystick?> _openJoystick;
     private readonly BindingConfig _binding;
     private readonly IReadOnlyList<BindingKind> _allowedKinds;
+    private readonly string _defaultAxisName;
 
     public EditBindingWindow(
         IReadOnlyList<DeviceOption> devices,
         Func<Guid, Joystick?> openJoystick,
         BindingConfig binding,
         IReadOnlyList<BindingKind> allowedKinds,
-        string effectName
+        string effectName,
+        string defaultAxisName
     )
     {
         InitializeComponent();
@@ -40,9 +50,10 @@ public partial class EditBindingWindow : Window
         _openJoystick = openJoystick;
         _binding = binding;
         _allowedKinds = allowedKinds;
+        _defaultAxisName = defaultAxisName;
 
         DeviceCombo.ItemsSource = _devices;
-        KindCombo.ItemsSource = _allowedKinds.ToArray();
+        RefreshKindOptions();
 
         DeviceCombo.SelectionChanged += (_, _) => OnDeviceChanged();
         KindCombo.SelectionChanged += (_, _) => OnKindChanged();
@@ -76,9 +87,10 @@ public partial class EditBindingWindow : Window
             DeviceCombo.SelectedIndex = 0;
 
         // Kind
-        KindCombo.SelectedItem = _allowedKinds.Contains(_binding.Kind)
+        var initialKind = _allowedKinds.Contains(_binding.Kind)
             ? _binding.Kind
             : _allowedKinds.FirstOrDefault();
+        SelectKind(initialKind);
 
         // Intensity
         IntensitySlider.Value = Math.Clamp(_binding.Intensity, 0f, 1f);
@@ -90,7 +102,8 @@ public partial class EditBindingWindow : Window
 
     private void OnKindChanged()
     {
-        if (KindCombo.SelectedItem is not BindingKind kind) return;
+        var kind = GetSelectedKind();
+        if (kind is null) return;
 
         if (kind == BindingKind.Axis)
         {
@@ -102,8 +115,6 @@ public partial class EditBindingWindow : Window
             _binding.AxisMin = null;
             _binding.AxisMax = null;
         }
-
-        // TODO: add binding info in the bottom of the UI so user can see current binding details
     }
 
     private void OnEditControl()
@@ -114,7 +125,8 @@ public partial class EditBindingWindow : Window
             return;
         }
 
-        if (KindCombo.SelectedItem is not BindingKind kind)
+        var kind = GetSelectedKind();
+        if (kind is null)
         {
             MessageBox.Show("Select a type.");
             return;
@@ -122,7 +134,7 @@ public partial class EditBindingWindow : Window
 
         _binding.DeviceGuid = dev.Guid;
         _binding.DeviceName = dev.Name;
-        _binding.Kind = kind;
+        _binding.Kind = kind.Value;
 
         var main = Owner as MainWindow;
         if (main == null)
@@ -163,6 +175,8 @@ public partial class EditBindingWindow : Window
             _binding.AxisMax = null;
             _binding.InvertAxis = false;
         }
+
+        RefreshKindOptions();
     }
 
     private void OnDeviceChanged()
@@ -229,7 +243,8 @@ public partial class EditBindingWindow : Window
             return;
         }
 
-        if (KindCombo.SelectedItem is not BindingKind kind)
+        var kind = GetSelectedKind();
+        if (kind is null)
         {
             MessageBox.Show("Select a type.");
             return;
@@ -237,7 +252,7 @@ public partial class EditBindingWindow : Window
 
         _binding.DeviceGuid = dev.Guid;
         _binding.DeviceName = dev.Name;
-        _binding.Kind = kind;
+        _binding.Kind = kind.Value;
         _binding.Intensity = (float)IntensitySlider.Value;
 
         if (kind == BindingKind.Axis)
@@ -264,5 +279,42 @@ public partial class EditBindingWindow : Window
 
         DialogResult = true;
         Close();
+    }
+
+    private void RefreshKindOptions()
+    {
+        var selectedKind = GetSelectedKind() ?? _binding.Kind;
+        var options = _allowedKinds
+            .Select(kind => new KindOption
+            {
+                Kind = kind,
+                Label = kind == BindingKind.Axis ? GetAxisKindLabel() : kind.ToString()
+            })
+            .ToList();
+
+        KindCombo.ItemsSource = options;
+        SelectKind(selectedKind);
+    }
+
+    private void SelectKind(BindingKind? kind)
+    {
+        if (kind is null) return;
+        if (KindCombo.ItemsSource is not IEnumerable<KindOption> options) return;
+        KindCombo.SelectedItem = options.FirstOrDefault(option => option.Kind == kind);
+    }
+
+    private BindingKind? GetSelectedKind()
+    {
+        return KindCombo.SelectedItem is KindOption option ? option.Kind : null;
+    }
+
+    private string GetAxisKindLabel()
+    {
+        var axisName = string.IsNullOrWhiteSpace(_binding.AxisName)
+            ? _defaultAxisName
+            : _binding.AxisName;
+
+        axisName = string.IsNullOrWhiteSpace(axisName) ? "RotationX" : axisName;
+        return $"Axis | {axisName}";
     }
 }

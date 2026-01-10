@@ -698,7 +698,8 @@ public partial class MainWindow : Window
             TryOpenJoystick,
             binding,
             allowedKinds,
-            row.EffectName
+            row.EffectName,
+            _profile.ThrottleSettings.DefaultAxisName
         )
         {
             Owner = this
