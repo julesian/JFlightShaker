@@ -8,6 +8,8 @@ using JFlightShaker.UI;
 using NAudio.CoreAudioApi;
 using SharpDX.DirectInput;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -71,6 +73,8 @@ public partial class MainWindow : Window
             InitializeActionButtons();
 
             StartStopBtn.Click += (_, _) => ToggleStartStop();
+            OpenConfigBtn.Click += (_, _) => OpenConfigFolder();
+
             UpdateStartStopUI();
 
             AudioDevices.SelectionChanged += AudioDevices_SelectionChanged;
@@ -134,8 +138,6 @@ public partial class MainWindow : Window
         EditBtn.IsEnabled = hasSelection;
         UnbindBtn.IsEnabled = hasSelection && SelectedEffectRow!.IsBound;
     }
-
-
 
     private void RefreshDevices()
     {
@@ -263,6 +265,22 @@ public partial class MainWindow : Window
     private void UpdateStartStopUI()
     {
         StartStopBtn.Content = _isRunning ? "Stop" : "Start";
+    }
+
+    private void OpenConfigFolder()
+    {
+        if (_store == null) return;
+
+        var folder = _store.RootDir;
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments = folder,
+            UseShellExecute = true
+        });
     }
 
     private void ToggleStartStop()
