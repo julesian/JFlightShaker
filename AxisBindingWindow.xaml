@@ -21,13 +21,13 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Axis:" VerticalAlignment="Center"/>
-        <ComboBox x:Name="AxisCombo" Grid.Row="0" Grid.Column="1" Height="28" Margin="8,0,0,0"/>
+        <ComboBox x:Name="AxisCombo" Grid.Row="0" Grid.Column="1" Height="28" Margin="8,0,0,0" Padding="6,0,6,0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Min (0..1):" VerticalAlignment="Center" Margin="0,8,0,0"/>
-        <TextBox x:Name="MinBox" Grid.Row="1" Grid.Column="1" Height="28" VerticalContentAlignment="Center" Margin="8,8,0,0"/>
+        <TextBox x:Name="MinBox" Grid.Row="1" Grid.Column="1" Height="28" Margin="8,8,0,0" Padding="6,0,6,0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Max (0..1):" VerticalAlignment="Center" Margin="0,8,0,0"/>
-        <TextBox x:Name="MaxBox" Grid.Row="2" Grid.Column="1" Height="28" VerticalContentAlignment="Center" Margin="8,8,0,0"/>
+        <TextBox x:Name="MaxBox" Grid.Row="2" Grid.Column="1" Height="28" Margin="8,8,0,0" Padding="6,0,6,0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 
         <CheckBox x:Name="InvertCheck" Grid.Row="3" Grid.Column="1" Content="Invert" Margin="8,10,0,0"/>
 

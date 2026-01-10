@@ -18,7 +18,7 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Button:" VerticalAlignment="Center"/>
-        <TextBox x:Name="ButtonTextBox" Grid.Row="0" Grid.Column="1" Height="28" VerticalContentAlignment="Center" Margin="8,0,8,0"/>
+        <TextBox x:Name="ButtonTextBox" Grid.Row="0" Grid.Column="1" Height="28" Margin="8,0,8,0" Padding="6,0,6,0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
         <Button x:Name="ListenBtn" Grid.Row="0" Grid.Column="2" Height="28" Content="Listen" Margin="0,0,0,0"/>
 
         <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
