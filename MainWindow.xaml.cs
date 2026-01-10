@@ -27,10 +27,14 @@ public partial class MainWindow : Window
     private MultiJoystickPoller? _poller;
     private GlobalInputLogger _logger;
 
+    public event Action<Guid, int>? ButtonPressedEdge;
+
     // UI
     private EffectRow? SelectedEffectRow => BindingsGrid.SelectedItem as EffectRow;
     private readonly ObservableCollection<EffectRow> _effectRows = new();
     private bool _isRunning;
+
+    public bool IsRunning => _isRunning;
 
     // Thread | Timers
     private readonly object _sync = new();
@@ -439,6 +443,7 @@ public partial class MainWindow : Window
             if (isDown && !wasDown)
             {
                 _logger.LogButton(deviceGuid, i, true);
+                ButtonPressedEdge?.Invoke(deviceGuid, i);
                 OnButtonPressed(deviceGuid, i);
             }
             else if (!isDown && wasDown)

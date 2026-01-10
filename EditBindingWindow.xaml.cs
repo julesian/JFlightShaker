@@ -42,7 +42,8 @@ public partial class EditBindingWindow : Window
         KindCombo.ItemsSource = new[] { BindingKind.Axis, BindingKind.Button };
 
         DeviceCombo.SelectionChanged += (_, _) => OnDeviceChanged();
-        KindCombo.SelectionChanged += (_, _) => UpdateKindUI();
+        KindCombo.SelectionChanged += (_, _) => OnKindChanged();
+        EditControlBtn.Click += (_, _) => OnEditControl();
 
         IntensitySlider.ValueChanged += (_, _) =>
         {
@@ -80,50 +81,88 @@ public partial class EditBindingWindow : Window
 
         // Load axes for current device
         OnDeviceChanged();
+    }
 
-        // Preselect axis/button
-        if (!string.IsNullOrWhiteSpace(_binding.AxisName))
-            AxisCombo.SelectedItem = _binding.AxisName;
+    private void OnKindChanged()
+    {
+        if (KindCombo.SelectedItem is not BindingKind kind) return;
 
-        if (_binding.ButtonIndex is int bi)
-            ButtonTextBox.Text = bi.ToString(CultureInfo.InvariantCulture);
+        if (kind == BindingKind.Axis)
+        {
+            _binding.ButtonIndex = null;
+        }
+        else
+        {
+            _binding.AxisName = null;
+            _binding.AxisMin = null;
+            _binding.AxisMax = null;
+        }
 
-        UpdateKindUI();
+        // TODO: add binding info in the bottom of the UI so user can see current binding details
+    }
+
+    private void OnEditControl()
+    {
+        if (DeviceCombo.SelectedItem is not DeviceOption dev)
+        {
+            MessageBox.Show("Select a device.");
+            return;
+        }
+
+        if (KindCombo.SelectedItem is not BindingKind kind)
+        {
+            MessageBox.Show("Select a type.");
+            return;
+        }
+
+        _binding.DeviceGuid = dev.Guid;
+        _binding.DeviceName = dev.Name;
+        _binding.Kind = kind;
+
+        var main = Owner as MainWindow;
+        if (main == null)
+        {
+            MessageBox.Show("Main window not found.");
+            return;
+        }
+
+        Window? editor = kind switch
+        {
+            BindingKind.Axis => new AxisBindingWindow(_devices, _openJoystick, _binding) { Owner = this },
+
+            BindingKind.Button => new ButtonBindingWindow(
+                _binding,
+                dev.Guid,
+                () => main.IsRunning,
+                handler => main.ButtonPressedEdge += handler,
+                handler => main.ButtonPressedEdge -= handler
+            )
+            { Owner = this },
+
+            _ => null
+        };
+
+        if (editor == null) return;
+
+        var ok = editor.ShowDialog() == true;
+        if (!ok) return;
+
+        if (kind == BindingKind.Axis)
+        {
+            _binding.ButtonIndex = null;
+        }
+        else
+        {
+            _binding.AxisName = null;
+            _binding.AxisMin = null;
+            _binding.AxisMax = null;
+            _binding.InvertAxis = false;
+        }
     }
 
     private void OnDeviceChanged()
     {
-        AxisCombo.ItemsSource = null;
-
-        if (DeviceCombo.SelectedItem is not DeviceOption dev)
-            return;
-
-        var axes = GetDeviceAxes(dev.Guid);
-        AxisCombo.ItemsSource = axes;
-
-        // If device changed, clear inputs
-        if (_binding.DeviceGuid != dev.Guid)
-        {
-            AxisCombo.SelectedItem = null;
-            ButtonTextBox.Text = "";
-        }
-
-        if (KindCombo.SelectedItem is BindingKind kind && kind == BindingKind.Axis)
-        {
-            if (AxisCombo.SelectedItem == null && axes.Count > 0)
-                AxisCombo.SelectedIndex = 0;
-        }
-    }
-
-    private void UpdateKindUI()
-    {
-        var isAxis = (KindCombo.SelectedItem is BindingKind k) && k == BindingKind.Axis;
-
-        AxisCombo.IsEnabled = isAxis;
-        ButtonTextBox.IsEnabled = !isAxis;
-
-        AxisCombo.Opacity = isAxis ? 1.0 : 0.45;
-        ButtonTextBox.Opacity = isAxis ? 0.45 : 1.0;
+        // TODO: for binding display info
     }
 
     private List<string> GetDeviceAxes(Guid deviceGuid)
@@ -198,24 +237,14 @@ public partial class EditBindingWindow : Window
 
         if (kind == BindingKind.Axis)
         {
-            if (AxisCombo.SelectedItem is not string axis || string.IsNullOrWhiteSpace(axis))
-            {
-                MessageBox.Show("Select an axis.");
-                return;
-            }
-
-            _binding.AxisName = axis;
+            // TODO: pass data from axis window
+            _binding.AxisName = "axis";
             _binding.ButtonIndex = null;
         }
         else
         {
-            if (!int.TryParse(ButtonTextBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var bi) || bi < 0)
-            {
-                MessageBox.Show("Enter a valid button index (0+).");
-                return;
-            }
-
-            _binding.ButtonIndex = bi;
+            // TODO: pass data from button window
+            _binding.ButtonIndex = 0;
             _binding.AxisName = null;
         }
 
