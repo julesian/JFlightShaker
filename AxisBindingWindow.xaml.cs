@@ -1,4 +1,5 @@
 ﻿using JFlightShaker.Config;
+using JFlightShaker.Input;
 using SharpDX.DirectInput;
 using System.Globalization;
 using System.Windows;
@@ -7,9 +8,12 @@ namespace JFlightShaker.UI;
 
 public partial class AxisBindingWindow : Window
 {
+    private MultiJoystickPoller? _poller;
+    private JoystickState? _latestState;
     private readonly IReadOnlyList<DeviceOption> _devices;
     private readonly Func<Guid, Joystick?> _openJoystick;
     private readonly BindingConfig _binding;
+    private Guid _deviceGuid;
 
     public AxisBindingWindow(
         IReadOnlyList<DeviceOption> devices,
@@ -23,6 +27,7 @@ public partial class AxisBindingWindow : Window
 
         CancelBtn.Click += (_, _) => { DialogResult = false; Close(); };
         SaveBtn.Click += (_, _) => OnSave();
+        AxisCombo.SelectionChanged += (_, _) => UpdateAxisInputLabel();
 
         LoadState();
     }
@@ -37,6 +42,8 @@ public partial class AxisBindingWindow : Window
             return;
         }
 
+        _deviceGuid = devGuid;
+
         var axes = BindingUiHelper.GetDeviceAxes(_openJoystick, devGuid);
         AxisCombo.ItemsSource = axes;
 
@@ -49,6 +56,8 @@ public partial class AxisBindingWindow : Window
         MinBox.Text = (_binding.AxisMin ?? 0f).ToString("0.###", CultureInfo.InvariantCulture);
         MaxBox.Text = (_binding.AxisMax ?? 1f).ToString("0.###", CultureInfo.InvariantCulture);
         InvertCheck.IsChecked = _binding.InvertAxis;
+
+        StartPolling();
     }
 
     private void OnSave()
@@ -90,5 +99,66 @@ public partial class AxisBindingWindow : Window
 
         DialogResult = true;
         Close();
+    }
+    private void StartPolling()
+    {
+        var js = _openJoystick(_deviceGuid);
+        if (js == null)
+        {
+            AxisInputLabel.Text = "Unable to read device.";
+            return;
+        }
+
+        _poller = new MultiJoystickPoller();
+        _poller.StateReceived += OnState;
+        _poller.PollError += ex => Dispatcher.Invoke(() => AxisInputLabel.Text = "Poll error: " + ex.Message);
+        _poller.Add(_deviceGuid, js);
+        _poller.Start(10);
+    }
+
+    private void OnState(Guid deviceGuid, JoystickState state)
+    {
+        _latestState = state;
+        Dispatcher.BeginInvoke(UpdateAxisInputLabel);
+    }
+
+    private void UpdateAxisInputLabel()
+    {
+        if (AxisCombo.SelectedItem is not string axisName || string.IsNullOrWhiteSpace(axisName))
+            return;
+
+        var state = _latestState;
+        if (state is null) return;
+
+        int raw = GetAxisRaw(state, axisName);
+        int clamped = Math.Clamp(raw, 0, 65535);
+        double normalized = clamped / 65535.0;
+
+        AxisInputLabel.Text = $"{axisName} | Raw {clamped} | {normalized.ToString("0.00", CultureInfo.InvariantCulture)}";
+    }
+
+    private static int GetAxisRaw(JoystickState state, string axisName) => axisName switch
+    {
+        "X" => state.X,
+        "Y" => state.Y,
+        "Z" => state.Z,
+        "RotationX" => state.RotationX,
+        "RotationY" => state.RotationY,
+        "RotationZ" => state.RotationZ,
+        "Slider0" => (state.Sliders != null && state.Sliders.Length > 0) ? state.Sliders[0] : 0,
+        "Slider1" => (state.Sliders != null && state.Sliders.Length > 1) ? state.Sliders[1] : 0,
+        _ => 0
+    };
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (_poller != null)
+        {
+            _poller.StateReceived -= OnState;
+            _poller.Dispose();
+            _poller = null;
+        }
+
+        base.OnClosed(e);
     }
 }
