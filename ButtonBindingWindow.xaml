@@ -22,7 +22,7 @@
         <Button x:Name="ListenBtn" Grid.Row="0" Grid.Column="2" Height="28" Content="Listen" Margin="0,0,0,8"/>
 
         <TextBlock x:Name="TriggerLabel" Grid.Row="1" Grid.Column="0" Text="Trigger:" VerticalAlignment="Center" Margin="0,0,0,8"/>
-        <ComboBox x:Name="TriggerCombo" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="28" Margin="8,0,0,8"/>
+        <ComboBox x:Name="TriggerCombo" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="28" Margin="8,0,0,8" VerticalContentAlignment="Center"/>
 
         <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="CancelBtn" Content="Cancel" Width="90" Height="28" Margin="0,0,8,0"/>
