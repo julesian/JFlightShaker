@@ -237,15 +237,24 @@ public partial class EditBindingWindow : Window
 
         if (kind == BindingKind.Axis)
         {
-            // TODO: pass data from axis window
-            _binding.AxisName = "axis";
             _binding.ButtonIndex = null;
+
+            if (string.IsNullOrWhiteSpace(_binding.AxisName))
+            {
+                MessageBox.Show("Select an axis with Edit Control.");
+                return;
+            }
         }
         else
         {
-            // TODO: pass data from button window
-            _binding.ButtonIndex = 0;
-            _binding.AxisName = null;
+            _binding.AxisMin = null;
+            _binding.AxisMax = null;
+            _binding.InvertAxis = false;
+            if (_binding.ButtonIndex is null)
+            {
+                MessageBox.Show("Select a button with Edit Control.");
+                return;
+            }
         }
 
         DialogResult = true;
