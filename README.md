@@ -103,7 +103,6 @@ Config/
 
 ## Todo
 - Better UI/UX
-- Research: Default Controller ForceFeedback to Effects
 - Editable effects thorugh UI (You can customize through JSON)
 - Customizable gun interval
 - Adding of custom effects
