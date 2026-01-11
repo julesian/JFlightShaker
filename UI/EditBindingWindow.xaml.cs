@@ -1,10 +1,7 @@
 ﻿using JFlightShaker.Config;
 using JFlightShaker.Enum;
 using SharpDX.DirectInput;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Windows;
 
 namespace JFlightShaker.UI;
@@ -312,7 +309,7 @@ public partial class EditBindingWindow : Window
         axisName = string.IsNullOrWhiteSpace(axisName) ? "RotationX" : axisName;
         return $"Axis | {axisName}";
     }
-    
+
     private void ClampTrigger()
     {
         var allowed = EffectBindingRules.GetAllowedTriggers(_binding.Effect);

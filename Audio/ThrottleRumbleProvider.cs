@@ -1,5 +1,5 @@
-﻿using NAudio.Wave;
-using JFlightShaker.Config;
+﻿using JFlightShaker.Config;
+using NAudio.Wave;
 
 namespace JFlightShaker.Audio;
 

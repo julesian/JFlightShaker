@@ -1,7 +1,7 @@
-﻿using SharpDX.DirectInput;
-using JFlightShaker.Config;
-using JFlightShaker.Input;
+﻿using JFlightShaker.Config;
 using JFlightShaker.Enum;
+using JFlightShaker.Input;
+using SharpDX.DirectInput;
 
 namespace JFlightShaker.Core;
 

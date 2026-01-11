@@ -93,7 +93,7 @@ public partial class MainWindow : Window
     }
 
     private void AudioDevices_SelectionChanged(
-        object sender, 
+        object sender,
         System.Windows.Controls.SelectionChangedEventArgs e
     )
     {
@@ -542,7 +542,7 @@ public partial class MainWindow : Window
     }
 
     private void OnButtonPressed(
-        Guid deviceGuid, 
+        Guid deviceGuid,
         int buttonIndex
     )
     {
@@ -655,7 +655,7 @@ public partial class MainWindow : Window
         _engine.Enabled = enabled;
         _engine.SetTargetAmplitude(total);
     }
-    
+
     private void Stop()
     {
         SetEffectsRunning(false);
@@ -825,5 +825,5 @@ public partial class MainWindow : Window
             return null;
         }
     }
-    
+
 }

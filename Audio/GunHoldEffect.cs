@@ -1,6 +1,5 @@
-﻿using System;
+﻿namespace JFlightShaker.Audio;
 
-namespace JFlightShaker.Audio;
 public sealed class GunHoldEffect : RumbleEffect
 {
     private readonly Random _rng = new();
@@ -41,7 +40,7 @@ public sealed class GunHoldEffect : RumbleEffect
             float r = (float)(_rng.NextDouble() * 2.0 - 1.0); // -1..1
             shaped = Math.Clamp(shaped + r * jitter * 0.15f, 0f, 1f);
         }
-        
+
         // Optional floor gate
         float floor = Math.Clamp(Settings.Floor, 0f, 1f);
         if (shaped < floor) shaped = 0f;

@@ -1,4 +1,5 @@
 ﻿namespace JFlightShaker.Config;
+
 using JFlightShaker.Enum;
 
 public sealed class BindingConfig

@@ -1,9 +1,7 @@
 ﻿using JFlightShaker.Config;
 using JFlightShaker.Enum;
 using JFlightShaker.Service;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Windows;
 
 namespace JFlightShaker.UI;

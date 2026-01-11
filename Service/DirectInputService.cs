@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using SharpDX.DirectInput;
+﻿using SharpDX.DirectInput;
 
 namespace JFlightShaker.Service;
 

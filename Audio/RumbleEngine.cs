@@ -1,6 +1,6 @@
-﻿using NAudio.CoreAudioApi;
+﻿using JFlightShaker.Config;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
-using JFlightShaker.Config;
 
 namespace JFlightShaker.Audio;
 

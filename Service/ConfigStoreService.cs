@@ -1,6 +1,6 @@
-﻿using System.IO;
+﻿using JFlightShaker.Config;
+using System.IO;
 using System.Text.Json;
-using JFlightShaker.Config;
 
 namespace JFlightShaker.Service;
 
