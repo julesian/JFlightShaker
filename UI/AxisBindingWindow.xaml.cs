@@ -1,4 +1,5 @@
 ﻿using JFlightShaker.Config;
+using JFlightShaker.Helpers;
 using JFlightShaker.Input;
 using SharpDX.DirectInput;
 using System.Globalization;

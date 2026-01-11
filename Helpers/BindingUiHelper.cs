@@ -1,6 +1,6 @@
 ﻿using SharpDX.DirectInput;
 
-namespace JFlightShaker;
+namespace JFlightShaker.Helpers;
 
 public static class BindingUiHelper
 {

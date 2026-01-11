@@ -1,10 +1,10 @@
-﻿using JFlightShaker.Service;
-using SharpDX.DirectInput;
+﻿using SharpDX.DirectInput;
 using System.Windows;
 using System.Windows.Interop;
 using System.Threading;
+using JFlightShaker.Input;
 
-namespace JFlightShaker.Input;
+namespace JFlightShaker.Service;
 
 public sealed class InputPollingService : IDisposable
 {

@@ -1,6 +1,6 @@
 ﻿using JFlightShaker.Config;
 using JFlightShaker.Enum;
-using JFlightShaker.Input;
+using JFlightShaker.Service;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
