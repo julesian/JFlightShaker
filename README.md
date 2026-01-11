@@ -1,6 +1,7 @@
 <img width="124" height="124" alt="jflightshaker" src="https://github.com/user-attachments/assets/6315a1b2-2bcd-4355-aaab-9e4905c1ac31" /> 
 
 # JFlightShaker
+[![Downloads](https://img.shields.io/github/downloads/julesian/JFlightShaker/total?style=for-the-badge&logo=github)](https://github.com/julesian/JFlightShaker/releases)
 
 **JFlightShaker** is a Windows application that maps throttle and stick inputs to
 arcade-style flight-sim rumble effects using audio bass shakers.
