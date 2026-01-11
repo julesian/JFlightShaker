@@ -147,7 +147,7 @@ public partial class MainWindow : Window
     {
         var audio = _audioSvc.GetRenderDevices();
         AudioDevices.ItemsSource = audio;
-        AudioDevices.DisplayMemberPath = "FriendlyName";
+        AudioDevices.DisplayMemberPath = nameof(AudioDeviceOption.FriendlyName);
 
         var joys = _inputSvc.ListJoysticks();
 
@@ -168,10 +168,10 @@ public partial class MainWindow : Window
         _isRestoringSelections = true;
         try
         {
-            var audio = (IEnumerable<MMDevice>)AudioDevices.ItemsSource;
+            var audio = (IEnumerable<AudioDeviceOption>)AudioDevices.ItemsSource;
 
             var selected = _profile.AppConfig.SelectedAudioDeviceId is string aid
-                ? audio.FirstOrDefault(x => x.ID == aid)
+                ? audio.FirstOrDefault(x => x.Id == aid)
                 : null;
 
             AudioDevices.SelectedItem = selected ?? audio.FirstOrDefault();
@@ -323,13 +323,21 @@ public partial class MainWindow : Window
         throttleDevice = null!;
         stickDevice = null!;
 
-        if (AudioDevices.SelectedItem is not MMDevice audio)
+        if (AudioDevices.SelectedItem is not AudioDeviceOption audioOption)
         {
             MessageBox.Show("Select an audio device.");
             return false;
         }
 
-        audioDevice = audio;
+        var device = _audioSvc.GetRenderDeviceById(audioOption.Id);
+        if (device == null)
+        {
+            MessageBox.Show("Selected audio device is unavailable.");
+            return false;
+        }
+
+        audioDevice = device;
+
         return true;
     }
 
@@ -706,9 +714,9 @@ public partial class MainWindow : Window
     {
         if (_store == null) return;
 
-        if (AudioDevices.SelectedItem is MMDevice audio)
+        if (AudioDevices.SelectedItem is AudioDeviceOption audio)
         {
-            _profile.AppConfig.SelectedAudioDeviceId = audio.ID;
+            _profile.AppConfig.SelectedAudioDeviceId = audio.Id;
             _store.SaveAppConfig(_profile.AppConfig);
         }
     }
