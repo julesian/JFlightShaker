@@ -1,3 +1,5 @@
+<img width="124" height="124" alt="jflightshaker" src="https://github.com/user-attachments/assets/6315a1b2-2bcd-4355-aaab-9e4905c1ac31" /> 
+
 # JFlightShaker
 
 **JFlightShaker** is a Windows application that maps throttle and stick inputs to
@@ -15,7 +17,7 @@ Makes a great massage chair too 😆.
 
 ---
 
-<img width="1038" height="590" alt="JFlightShaker_v0 1 0" src="https://github.com/user-attachments/assets/39ffe2ea-336a-4ff8-8aa3-efdf276f4030" />
+<img width="1040" height="592" alt="JFlightShaker_v0 1 1" src="https://github.com/user-attachments/assets/f2b71664-c158-4fbc-aaee-0b1a5463764a" />
 
 ## Download
 
