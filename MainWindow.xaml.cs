@@ -115,20 +115,15 @@ public partial class MainWindow : Window
         // TODO: Later on make this dynamic via reflection or config file
         _effectRows.Clear();
 
-        _effectRows.Add(new EffectRow(
-            RumbleEffectType.ThrottleAxis,
-            "Throttle"
-        ));
+        var effects = new[]
+        {
+            new EffectRow(RumbleEffectType.ThrottleAxis, "Throttle"),
+            new EffectRow(RumbleEffectType.Gun, "Gun Fire"),
+            new EffectRow(RumbleEffectType.MuteEffects, "Mute Effects")
+        };
 
-        _effectRows.Add(new EffectRow(
-            RumbleEffectType.Gun,
-            "Gun Fire"
-        ));
-
-        _effectRows.Add(new EffectRow(
-            RumbleEffectType.MuteEffects,
-            "Mute Effects"
-        ));
+        foreach (var effect in effects)
+            _effectRows.Add(effect);
     }
 
     private void InitializeActionButtons()
@@ -159,14 +154,6 @@ public partial class MainWindow : Window
         _deviceNamesByGuid.Clear();
         foreach (var d in joys)
             _deviceNamesByGuid[d.InstanceGuid] = d.InstanceName;
-
-        var items = joys
-            .Select(d => new
-            {
-                Device = d,
-                Label = $"{d.InstanceName}  |  {d.InstanceGuid}"
-            })
-            .ToList();
     }
 
     private void LoadActiveProfileAndApply()
@@ -183,20 +170,11 @@ public partial class MainWindow : Window
         {
             var audio = (IEnumerable<MMDevice>)AudioDevices.ItemsSource;
 
-            if (_profile.AppConfig.SelectedAudioDeviceId is string aid)
-            {
-                var match = audio.FirstOrDefault(x => x.ID == aid);
-                if (match != null)
-                {
-                    AudioDevices.SelectedItem = match;
-                    return;
-                }
-            }
+            var selected = _profile.AppConfig.SelectedAudioDeviceId is string aid
+                ? audio.FirstOrDefault(x => x.ID == aid)
+                : null;
 
-            // Fallback
-            var first = audio.FirstOrDefault();
-            if (first != null)
-                AudioDevices.SelectedItem = first;
+            AudioDevices.SelectedItem = selected ?? audio.FirstOrDefault();
         }
         finally
         {
@@ -258,7 +236,7 @@ public partial class MainWindow : Window
         => _deviceNamesByGuid.TryGetValue(guid, out var n) ? n : guid.ToString();
 
     private static string GetTriggerLabel(TriggerType trigger)
-    => trigger == TriggerType.Press ? "Press" : "Hold";
+        => trigger == TriggerType.Press ? "Press" : "Hold";
 
     private ActiveProfile LoadActiveProfile()
     {
@@ -769,7 +747,6 @@ public partial class MainWindow : Window
         var binding = _profile.Bindings.FirstOrDefault(b => b.Effect == row.Effect);
         if (binding == null)
         {
-            binding = new BindingConfig { Effect = row.Effect, Kind = BindingKind.Axis, Intensity = 1f };
             binding = new BindingConfig { Effect = row.Effect, Kind = defaultKind, Intensity = 1f };
             _profile.Bindings.Add(binding);
         }
