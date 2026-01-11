@@ -135,7 +135,7 @@ public partial class EditBindingWindow : Window
         }
 
         _binding.DeviceGuid = dev.Guid;
-        _binding.DeviceName = dev.Name;
+        _binding.DeviceName = dev.Name.Trim();
         _binding.Kind = kind.Value;
 
         Window? editor = kind.Value switch
@@ -244,7 +244,7 @@ public partial class EditBindingWindow : Window
         }
 
         _binding.DeviceGuid = dev.Guid;
-        _binding.DeviceName = dev.Name;
+        _binding.DeviceName = dev.Name.Trim();
         _binding.Kind = kind.Value;
         _binding.Intensity = (float)IntensitySlider.Value;
 

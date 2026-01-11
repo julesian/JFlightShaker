@@ -153,7 +153,10 @@ public partial class MainWindow : Window
 
         _deviceNamesByGuid.Clear();
         foreach (var d in joys)
-            _deviceNamesByGuid[d.InstanceGuid] = d.InstanceName;
+        {
+            var name = NormalizeDeviceName(d.InstanceName, d.InstanceGuid);
+            _deviceNamesByGuid[d.InstanceGuid] = name;
+        }
     }
 
     private void LoadActiveProfileAndApply()
@@ -209,13 +212,17 @@ public partial class MainWindow : Window
             if (kinds.Count == 1)
             {
                 var binding = bindings.First();
+                var axisName = string.IsNullOrWhiteSpace(binding.AxisName)
+                    ? "Axis"
+                    : binding.AxisName.Trim();
+
                 string bindingText = binding.Kind switch
                 {
                     BindingKind.Axis =>
-                        $"{DeviceName(binding.DeviceGuid!.Value)} / {binding.AxisName}",
+                        $"{DeviceName(binding.DeviceGuid!.Value)} | {axisName}",
 
                     BindingKind.Button =>
-                        $"{DeviceName(binding.DeviceGuid!.Value)} / Button {binding.ButtonIndex} ({GetTriggerLabel(binding.Trigger)})",
+                        $"{DeviceName(binding.DeviceGuid!.Value)} | Button {binding.ButtonIndex} ({GetTriggerLabel(binding.Trigger)})",
 
                     _ => "Unknown"
                 };
@@ -233,7 +240,15 @@ public partial class MainWindow : Window
     }
 
     private string DeviceName(Guid guid)
-        => _deviceNamesByGuid.TryGetValue(guid, out var n) ? n : guid.ToString();
+        => _deviceNamesByGuid.TryGetValue(guid, out var n)
+            ? NormalizeDeviceName(n, guid)
+            : guid.ToString();
+
+    private static string NormalizeDeviceName(string? name, Guid guid)
+    {
+        var trimmed = string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim();
+        return string.IsNullOrEmpty(trimmed) ? guid.ToString() : trimmed;
+    }
 
     private static string GetTriggerLabel(TriggerType trigger)
         => trigger == TriggerType.Press ? "Press" : "Hold";
@@ -363,7 +378,7 @@ public partial class MainWindow : Window
 
         foreach (var dev in joys)
         {
-            _deviceNamesByGuid[dev.InstanceGuid] = dev.InstanceName;
+            _deviceNamesByGuid[dev.InstanceGuid] = NormalizeDeviceName(dev.InstanceName, dev.InstanceGuid);
 
             var js = _inputSvc.Open(dev, hwnd);
             _poller.Add(dev.InstanceGuid, js);
