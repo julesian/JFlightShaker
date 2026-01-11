@@ -65,6 +65,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializeEffects();
+        SetVersionLabel();
 
         try
         {
@@ -90,6 +91,13 @@ public partial class MainWindow : Window
             MessageBox.Show(ex.ToString(), "Startup error");
             throw;
         }
+    }
+
+    private void SetVersionLabel()
+    {
+        var version = typeof(MainWindow).Assembly.GetName().Version;
+        var displayVersion = version == null ? "Unknown" : version.ToString(3);
+        VersionLabel.Text = $"Version {displayVersion}";
     }
 
     private void AudioDevices_SelectionChanged(

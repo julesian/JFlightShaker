@@ -70,6 +70,13 @@
                 </DataGrid.Columns>
             </DataGrid>
 
+            <TextBlock x:Name="VersionLabel"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       Margin="0,0,0,2"
+                       FontSize="11"
+                       Foreground="Gray"/>
+
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">

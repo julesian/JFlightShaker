@@ -12,7 +12,9 @@
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	  
     <AssemblyTitle>JFlightShaker</AssemblyTitle>
+    <Version>0.1.1</Version>
     <ApplicationIcon>Assets/App.ico</ApplicationIcon>
   </PropertyGroup>
 
