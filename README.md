@@ -106,6 +106,7 @@ Config/
 - Editable effects thorugh UI (You can customize through JSON)
 - Customizable gun interval
 - Adding of custom effects
+- Edge case error handling
 
   
 *This is vibe coded, as I don't know this stack yet, but of course I'm trying to learn
