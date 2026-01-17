@@ -107,6 +107,8 @@ Config/
 - Customizable gun interval
 - Adding of custom effects
 - Edge case error handling
+- Input Debug window
+- Clean up AI mess
 
   
 *This is vibe coded, as I don't know this stack yet, but of course I'm trying to learn
